@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Babylon.js sample code</title>
+
+    <!-- Babylon.js -->
+    <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/libktx.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
+        var player, KU = false, KD = false, KL = false, KR = false, Stop = false, teste = true, pontuacao = 0, txtPontuacaoAtual = undefined;
+
+        var createScene = function () {
+            // Create the scene space
+            scene = new BABYLON.Scene(engine);
+            createLights();
+            createFloorAndCamera();
+
+            createPlayer();
+            managerKeys();
+            movment();
+            colisionManeger();
+            uiManeger();
+            pointManger();
+
+
+
+            return scene;
+        }
+
+        function pointManger() {
+
+            var pontos = new BABYLON.Mesh("points", scene);
+
+            var incZ = 0.1;
+            for (var i = 0; i < 4; i++) {
+
+                var box = BABYLON.Mesh.CreateBox("point", .2, scene);
+                box.position.y = 0.25;
+                box.position.x = 1.27
+                box.position.z = incZ;
+                var grassMaterial = new BABYLON.StandardMaterial("grassMaterial", scene);
+                grassMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+                box.material = grassMaterial;
+                incZ += 0.3;
+                box.id = "point";
+                pontos.addChild(box);
+            }
+
+            var pontos = scene.getMeshesByID("point");
+            var index = null;
+
+            scene.registerBeforeRender(function () {
+
+                pontos.forEach(function (mesh) {
+                    if (player.intersectsMesh(mesh, false)) {
+
+                        index = pontos.indexOf(mesh);
+
+                        if (index > -1) {
+                            pontos.splice(index, 1);
+                            console.log(pontos);
+                            index = null;
+                            scene.removeMesh(mesh);
+                            pontuacao += 1;
+                            txtPontuacaoAtual.text = "Pontuação: " + pontuacao;
+                        }
+                    }   
+                });
+            });
+
+
+
+
+
+
+
+
+        }
+
+        function uiManeger() {
+
+            var ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI");
+
+            txtPontuacaoAtual = new BABYLON.GUI.TextBlock();
+            txtPontuacaoAtual.text = "Pontuação: " + pontuacao;
+            txtPontuacaoAtual.color = "white";
+            txtPontuacaoAtual.fontSize = 30;
+            txtPontuacaoAtual.top = "-40%";
+
+
+            ui.addControl(txtPontuacaoAtual);
+
+
+        }
+
+        function movment() {
+            var incX = 0, incZ = 0;
+
+            var renderLoop = function () {
+                scene.render();
+
+                if (KL) {
+                    incX = 0.01;
+                    incZ = 0;
+                    Stop = false;
+                    cleanKeyboadInput();
+                }
+
+                if (KR) {
+                    incX = -0.01;
+                    incZ = 0;
+                    Stop = false;
+                    cleanKeyboadInput();
+                }
+
+                if (KU) {
+                    incZ = -0.01;
+                    incX = 0;
+                    Stop = false;
+                    cleanKeyboadInput();
+                }
+
+                if (KD) {
+                    incZ = 0.01;
+                    incX = 0;
+                    Stop = false;
+                    cleanKeyboadInput();
+                }
+
+                if (Stop) {
+                    incX = 0;
+                    incZ = 0;
+                }
+
+
+
+                player.position.x += incX;
+                player.position.z += incZ;
+
+
+            };
+            engine.runRenderLoop(renderLoop);
+        }
+
+        function cleanKeyboadInput() {
+            KL = false;
+            KR = false;
+            KU = false;
+            KD = false;
+
+        }
+
+        function colisionManeger() {
+
+            var wall = scene.getMeshesByID("wall");
+
+            scene.registerBeforeRender(function () {
+
+                wall.forEach(function (mesh) {
+                    if (player.intersectsMesh(mesh, false)) {
+                        Stop = true;
+                    }
+                });
+
+            });
+
+
+        }
+
+        function managerKeys() {
+
+            scene.onKeyboardObservable.add((kbInfo) => {
+                switch (kbInfo.type) {
+                    case BABYLON.KeyboardEventTypes.KEYDOWN:
+                        console.log(kbInfo.event.key);
+                        switch (kbInfo.event.key) {
+                            case "a":
+                            case "A":
+                            case "ArrowLeft":
+                                KL = true;
+                                console.log("KEY LEFT: ", kbInfo.event.key, KL, KR, KU, KD);
+                                break;
+                            case "d":
+                            case "D":
+                            case "ArrowRight":
+                                KR = true;
+                                console.log("KEY RIGHT: ", kbInfo.event.key, KR, KL, KU, KD);
+                                break
+                            case "w":
+                            case "W":
+                            case "ArrowUp":
+                                KU = true;
+                                console.log("KEY UP: ", kbInfo.event.key, KU, KD, KL, KR);
+                                break
+                            case "s":
+                            case "S":
+                            case "ArrowDown":
+                                KD = true;
+                                console.log("KEY DOWN: ", kbInfo.event.key, KD, KU, KL, KR);
+                                break
+                            case "x":
+                            case "X":
+                                Stop = true;
+                                break
+                        }
+                        break;
+                }
+
+            });
+
+        }
+
+        function createFloorAndCamera() {
+            var planoMaterial = new BABYLON.StandardMaterial("floor", scene);
+            planoMaterial.diffuseTexture = new BABYLON.Texture("textures/floor.png", scene);
+
+            var myGround = BABYLON.MeshBuilder.CreateGround("myGround", { width: 8, height: 8, subdivisions: 1 }, scene);
+            myGround.material = planoMaterial;
+
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.FreeCamera("FreeCam", new BABYLON.Vector3(0, 12, 0), scene);
+            camera.lockedTarget = myGround;
+
+            var newMesh = new BABYLON.Mesh("walls", scene);
+
+            var bricksMaterial = new BABYLON.StandardMaterial("brick", scene);
+            bricksMaterial.diffuseTexture = new BABYLON.Texture("textures/bricks.png", scene);
+            //bricksMaterial.diffuseTexture.uScale = 8;
+            //bricksMaterial.diffuseTexture.vScale = 0.5;
+
+            var wallLeft = BABYLON.MeshBuilder.CreateBox("wall", { width: 0.5, depth: 9, height: 0.5 }, scene);
+            wallLeft.material = bricksMaterial;
+            wallLeft.position.x = 4.25;
+            wallLeft.id = "wall";
+
+            newMesh.addChild(wallLeft);
+
+            var wallRight = wallLeft.clone();
+            wallRight.position.x = -4.25;
+            wallRight.id = "wall";
+
+            newMesh.addChild(wallRight);
+
+            var wallTop = wallLeft.clone();
+            wallTop.position.x = 0;
+            wallTop.rotation.y = Math.PI / 2;
+            wallTop.position.z = -4.25;
+            wallTop.id = "wall";
+
+            newMesh.addChild(wallTop);
+
+            var wallDown = wallTop.clone();
+            wallDown.position.z = 4.25;
+            wallDown.id = "wall";
+
+            newMesh.addChild(wallDown);
+        }
+
+        function createPlayer() {
+            var grassMaterial = new BABYLON.StandardMaterial("grassMaterial", scene);
+            grassMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0);
+            player = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameter: 0.25, arc: 0.9, updatable: true }, scene);
+            player.material = grassMaterial;
+            player.position.y = 0.25;
+            player.id = "player";
+
+        }
+
+
+
+        function createLights() {
+            var light1 = new BABYLON.PointLight("light", new BABYLON.Vector3(15, 10, 0), scene);
+            var light2 = new BABYLON.PointLight("light", new BABYLON.Vector3(-15, 10, 0), scene);
+        }
+
+        function loop() {
+
+        }
+
+        engine = createDefaultEngine();
+        if (!engine) throw 'engine should not be null.';
+        scene = createScene();
+
+        engine.runRenderLoop(function () {
+            if (scene) {
+                loop();
+                scene.render();
+            }
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>

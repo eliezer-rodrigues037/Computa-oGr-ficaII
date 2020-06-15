@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Babylon.js sample code</title>
+
+    <!-- Babylon.js -->
+    <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/libktx.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+    <!-- Classes Jogo -->
+    <script src="Constantes.js"></script>
+    <script src="Tabuleiro.js"></script>
+    <script src="Peca.js"></script>
+    <script src="Jogadas.js"></script>
+    <script src="GameManager.js"></script>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        const statesEnum = { "Add": 1, "Remove": 2, "Editar": 3 }
+
+        var engine = null;
+        var scene = null;
+        var gameManager = undefined;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
+
+        var createScene = function () {
+            // Create the scene space
+            scene = new BABYLON.Scene(engine);
+            gameManager = new GameManager(scene);
+
+            CriarLuzes();
+            gameManager.CriarAmbienteInicial();
+            CriarCamera();
+
+            return scene;
+        }
+
+        function CriarLuzes() {
+            let dRow = PosLinInicial * 2;
+            let dCol = PosColInicial * 2;
+
+            var light1 = new BABYLON.PointLight("light", new BABYLON.Vector3(dRow, 10, 0), scene);
+            var light2 = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 10, -dCol), scene);
+            var light3 = new BABYLON.PointLight("light", new BABYLON.Vector3(0, -10, dCol), scene);
+            var light4 = new BABYLON.PointLight("light", new BABYLON.Vector3(-dRow, -10, 0), scene);
+        }
+
+        function CriarCamera() {
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, new BABYLON.Vector3(0, 0, 0), scene);
+            camera.setPosition(new BABYLON.Vector3(0, 20, 0));
+            camera.attachControl(canvas, true);
+        }
+
+        engine = createDefaultEngine();
+        if (!engine) throw 'engine should not be null.';
+        scene = createScene();
+
+        engine.runRenderLoop(function () {
+            if (scene) {
+                scene.render();
+            }
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>

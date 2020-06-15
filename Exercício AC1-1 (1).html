@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Babylon.js sample code</title>
+
+    <!-- Babylon.js -->
+    <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/libktx.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
+
+        var createScene = function () {
+
+            // Create the scene space
+            var scene = new BABYLON.Scene(engine);
+            scene.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(0, 0, -15));
+            camera.attachControl(canvas, true);
+
+
+            //Luz
+            var light1 = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 0, 0), scene);
+            light1.diffuse = new BABYLON.Color3(1, 1, 1);
+            light1.specular = new BABYLON.Color3(0.8, 0.8, 0.8);
+
+            //Outer line
+            var outerLine = CreateLineCircle(3);
+            outerLine.id = "OutLines";
+
+
+            //Outer spheres
+            var outerSphere = CreateOuterSpheres(3);
+            outerSphere.id = "outSphre";
+
+            //Inner Spheres and lines
+            var newMesh = new BABYLON.Mesh("inrSphrs", scene);
+            var deltaTheta = (Math.PI/4);
+            var theta = 0;
+
+            for(var i = 0 ; i < 9 ; i++){
+
+                var verticalCirle = CreateVerticalSpheres(1.5);
+                verticalCirle.position.x += 1.5;
+                newMesh.addChild(verticalCirle);
+                newMesh.rotation.y += theta;
+                theta+=deltaTheta;
+
+            }
+
+            
+
+            var newMesh = new BABYLON.Mesh("inrlines", scene);
+            var deltaTheta = (Math.PI/4);
+            var theta = 0;
+
+            for (var i = 0; i < 9; i++) {
+                var innerLine = createInnerLines(1.5);
+                innerLine.position.x += 1.5;
+                newMesh.addChild(innerLine);
+                newMesh.rotation.y += theta;
+                theta+=deltaTheta;
+            }
+
+            return scene;
+
+        }
+
+        function RNGMaterial() {
+
+            var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+
+            myMaterial.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+            myMaterial.specularColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+            myMaterial.emissiveColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+            myMaterial.ambientColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+
+            return myMaterial;
+        };
+
+        function CreateLineCircle(raio) {
+
+            var myPoints = [];
+            var deltaTheta = 0.1; //Variação do Ângulo
+            var radius = raio; // Raio
+            var theta = 0;
+            var Y = 0;
+
+            for (var i = 0; i < 64; i++) {
+
+                myPoints.push(new BABYLON.Vector3(radius * Math.cos(theta), Y, radius * Math.sin(theta)));
+                theta += deltaTheta;
+
+            }
+
+
+            //Create lines 
+            return BABYLON.MeshBuilder.CreateLines("lines", { points: myPoints }, scene);
+
+        }
+
+        function CreateOuterSpheres(raio) {
+
+            var newMesh = new BABYLON.Mesh("sphers", scene);
+            var radius = raio; // Raio
+            var deltaTheta = (Math.PI / 4); //Variação do Ângulo
+            var theta = 0;
+
+
+            for (var i = 0; i < 9; i++) {
+
+                var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.75 }, scene);
+                sphere.position.x = radius * Math.cos(theta);
+                sphere.position.z = radius * Math.sin(theta);
+                theta += deltaTheta;
+                sphere.material = RNGMaterial();
+                sphere.id = "sphr";
+                newMesh.addChild(sphere);
+
+            }
+
+            return newMesh;
+        }
+
+        function CreateVerticalSpheres(raio) {
+
+            var newMesh = new BABYLON.Mesh("sphers", scene);
+            var radius = raio; // Raio
+
+
+            var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.75 }, scene);
+            sphere.material = RNGMaterial();
+            sphere.position.x += raio;
+            
+
+            newMesh.addChild(sphere);
+            newMesh.id="Inersphr"
+
+
+            return newMesh;
+        }
+
+        function createInnerLines(raio) {
+
+            var newMesh = new BABYLON.Mesh("lines", scene);
+            var innerLine;
+            var radius = raio; // Raio
+            var myPoints = [];
+            var deltaTheta = 0.1; //Variação do Ângulo
+            var theta = 0;
+            var Y = 0;
+
+            for (var i = 0; i < 64; i++) {
+
+                myPoints.push(new BABYLON.Vector3(radius * Math.cos(theta), Y, radius * Math.sin(theta)));
+                theta += deltaTheta;
+
+            }
+
+            innerLine = BABYLON.MeshBuilder.CreateLines("lines", { points: myPoints }, scene)
+            innerLine.rotation.x += (Math.PI / 2);
+
+            return innerLine;
+
+        }
+
+        function loop() {
+            var meshes = scene.getMeshesByID("outSphre");
+
+            meshes.forEach(function (mesh) {
+                mesh.rotation.y += 0.01;
+            });
+
+            var meshes = scene.getMeshesByID("Inersphr");
+
+            meshes.forEach(function (mesh) {
+                mesh.rotation.z += 0.01;
+            });
+
+        };
+
+        engine = createDefaultEngine();
+        if (!engine) throw 'engine should not be null.';
+        scene = createScene();
+
+        engine.runRenderLoop(function () {
+            if (scene) {
+                loop();
+                scene.render();
+
+            }
+        });
+
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>

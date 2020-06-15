@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Babylon.js sample code</title>
+
+    <!-- Babylon.js -->
+    <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/libktx.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
+        var player, clickX, clickZ, impact;
+
+        var createScene = function () {
+            // Create the scene space
+            scene = new BABYLON.Scene(engine);
+            createLights();
+            createCamera();
+            createCubes();
+            managerEvents();
+            //MostrarEixos();
+            //animation();
+            //createMaker();
+
+            return scene;
+        }
+
+        function MostrarEixos() {
+
+            var showAxis = function (size) {
+                var makeTextPlane = function (text, color, size) {
+                    var dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 50, scene, true);
+                    dynamicTexture.hasAlpha = true;
+                    dynamicTexture.drawText(text, 5, 40, "bold 36px Arial", color, "transparent", true);
+                    var plane = new BABYLON.Mesh.CreatePlane("TextPlane", size, scene, true);
+                    plane.material = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
+                    plane.material.backFaceCulling = false;
+                    plane.material.specularColor = new BABYLON.Color3(0, 0, 0);
+                    plane.material.diffuseTexture = dynamicTexture;
+                    return plane;
+                };
+
+                var axisX = BABYLON.Mesh.CreateLines("axisX", [
+                    new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
+                    new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
+                ], scene);
+                axisX.color = new BABYLON.Color3(1, 0, 0);
+                var xChar = makeTextPlane("X", "red", size / 10);
+                xChar.position = new BABYLON.Vector3(0.9 * size, -0.05 * size, 0);
+                var axisY = BABYLON.Mesh.CreateLines("axisY", [
+                    new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
+                    new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
+                ], scene);
+                axisY.color = new BABYLON.Color3(0, 1, 0);
+                var yChar = makeTextPlane("Y", "green", size / 10);
+                yChar.position = new BABYLON.Vector3(0, 0.9 * size, -0.05 * size);
+                var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
+                    new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
+                    new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
+                ], scene);
+                axisZ.color = new BABYLON.Color3(0, 0, 1);
+                var zChar = makeTextPlane("Z", "blue", size / 10);
+                zChar.position = new BABYLON.Vector3(0, 0.05 * size, 0.9 * size);
+            };
+
+            showAxis(8);
+
+        }
+
+        function createMaker() {
+            impact = BABYLON.Mesh.CreateBox("impact", 0.5, scene);
+            impact.material = new BABYLON.StandardMaterial("impactMat", scene);
+            impact.material.diffuseTexture = new BABYLON.Texture("textures/impact.png", scene);
+            impact.material.diffuseTexture.hasAlpha = true;
+            impact.scaling.y = 0.1;
+        }
+
+        function animation() {
+            var incX = 0, incZ = 0;
+
+            var renderLoop = function () {
+                scene.render();
+
+                if (player.position.x > clickX) {
+                    incX = -0.01;
+                }
+                else {
+                    player.position.x > clickX
+                    incX = 0.01;
+                }
+
+                if (player.position.z > clickZ) {
+                    incZ = -0.01;
+                }
+                else {
+                    incZ = 0.01;
+                }
+
+                player.position.x += incX;
+                player.position.z += incZ;
+
+
+            };
+            engine.runRenderLoop(renderLoop);
+        }
+
+        function managerEvents() {
+            scene.onPointerDown = function (evt, pickResult) {
+                if (pickResult.hit && pickResult.pickedMesh.name == 'box') {
+                    var newBox = pickResult.pickedMesh.clone();
+                    newBox.position.y+=1;
+                    newBox.name = "box";
+                }
+            };
+        }
+
+        function createCamera() {
+            
+
+            var camera = new BABYLON.ArcRotateCamera("Camera", 1, 1, 15, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+
+        }
+
+        function createCubes() {
+            var metalMaterial = new BABYLON.StandardMaterial("MetalMaterial", scene);
+            metalMaterial.ambientTexture = new BABYLON.Texture("Textures/MetalTexture.jpg", scene);
+            var woodMaterial = new BABYLON.StandardMaterial("MetalMaterial", scene);
+            woodMaterial.ambientTexture = new BABYLON.Texture("Textures/WoodTexture.jpg", scene);
+            //metalMaterial.ambientTexture = new BABYLON.Texture("Textures/ChromeMetal.jpg", scene);
+            //metalMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+
+
+            for (let j = 0; j < 6; j++) {
+                for(let i = 0; i < 6; i++){
+                    var box = BABYLON.MeshBuilder.CreateBox("box", {}, scene); // default box
+                            
+                    if(i%2 == 0){
+                        if(j%2 == 0){
+                            box.material = metalMaterial;
+                        }
+                        else if(j%2 == 1){
+                            box.material = woodMaterial;
+                        }
+                    }
+                    else if(i%2 == 1){
+                        if(j%2 == 1){
+                            box.material = metalMaterial;    
+                        }
+                        else if (j%2 == 0){
+                            box.material = woodMaterial;
+                        }
+                        
+                    }   
+                    box.position.x =i;
+                    box.position.z =j;
+                }
+                
+            }
+            
+        }
+
+
+
+        function createLights() {
+            var light1 = new BABYLON.PointLight("light", new BABYLON.Vector3(15, 10, 0), scene);
+            var light2 = new BABYLON.PointLight("light", new BABYLON.Vector3(-15, 10, 0), scene);
+            var light3 = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 10, 15), scene);
+            var light4 = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 10, -15), scene);
+        }
+
+        engine = createDefaultEngine();
+        if (!engine) throw 'engine should not be null.';
+        scene = createScene();
+
+        engine.runRenderLoop(function () {
+            if (scene) {
+                scene.render();
+            }
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>

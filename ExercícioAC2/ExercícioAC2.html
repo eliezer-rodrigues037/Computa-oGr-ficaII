@@ -59,13 +59,41 @@
             createCamera();
             createCubes();
             managerEvents();
+            uiManeger();
             //MostrarEixos();
-            //animation();
-            //createMaker();
 
             return scene;
         }
 
+        function uiManeger() {
+
+            var ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI");
+            //Delete Button
+            btnAdd = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Adicionar");
+            
+            btnAdd.top = "40%";
+            btnAdd.left = "0px";
+            btnAdd.width = "200px";
+            btnAdd.height = "50px";
+            btnAdd.thickness = 4;
+            btnAdd.children[0].color = "#DFF9FB";
+            btnAdd.children[0].fontSize = 24;
+            btnAdd.color = "#FF7979";
+            btnAdd.background = "#EB4D4B"
+
+            var i = true;
+            var onBtnAddClick = () => {
+                if (i) {
+                    btnAdd.textBlock.text = "Deletar";
+                    i = false;
+                } else {
+                    btnAdd.textBlock.text = "Adicionar";
+                    i = true;
+                }
+            }
+            btnAdd.onPointerClickObservable.add(onBtnAddClick);
+            ui.addControl(this.btnAdd);
+        }
         function MostrarEixos() {
 
             var showAxis = function (size) {
@@ -108,55 +136,18 @@
 
         }
 
-        function createMaker() {
-            impact = BABYLON.Mesh.CreateBox("impact", 0.5, scene);
-            impact.material = new BABYLON.StandardMaterial("impactMat", scene);
-            impact.material.diffuseTexture = new BABYLON.Texture("textures/impact.png", scene);
-            impact.material.diffuseTexture.hasAlpha = true;
-            impact.scaling.y = 0.1;
-        }
-
-        function animation() {
-            var incX = 0, incZ = 0;
-
-            var renderLoop = function () {
-                scene.render();
-
-                if (player.position.x > clickX) {
-                    incX = -0.01;
-                }
-                else {
-                    player.position.x > clickX
-                    incX = 0.01;
-                }
-
-                if (player.position.z > clickZ) {
-                    incZ = -0.01;
-                }
-                else {
-                    incZ = 0.01;
-                }
-
-                player.position.x += incX;
-                player.position.z += incZ;
-
-
-            };
-            engine.runRenderLoop(renderLoop);
-        }
-
         function managerEvents() {
             scene.onPointerDown = function (evt, pickResult) {
                 if (pickResult.hit && pickResult.pickedMesh.name == 'box') {
                     var newBox = pickResult.pickedMesh.clone();
-                    newBox.position.y+=1;
+                    newBox.position.y += 1;
                     newBox.name = "box";
                 }
             };
         }
 
         function createCamera() {
-            
+
 
             var camera = new BABYLON.ArcRotateCamera("Camera", 1, 1, 15, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
@@ -174,32 +165,32 @@
 
 
             for (let j = 0; j < 6; j++) {
-                for(let i = 0; i < 6; i++){
+                for (let i = 0; i < 6; i++) {
                     var box = BABYLON.MeshBuilder.CreateBox("box", {}, scene); // default box
-                            
-                    if(i%2 == 0){
-                        if(j%2 == 0){
+
+                    if (i % 2 == 0) {
+                        if (j % 2 == 0) {
                             box.material = metalMaterial;
                         }
-                        else if(j%2 == 1){
+                        else if (j % 2 == 1) {
                             box.material = woodMaterial;
                         }
                     }
-                    else if(i%2 == 1){
-                        if(j%2 == 1){
-                            box.material = metalMaterial;    
+                    else if (i % 2 == 1) {
+                        if (j % 2 == 1) {
+                            box.material = metalMaterial;
                         }
-                        else if (j%2 == 0){
+                        else if (j % 2 == 0) {
                             box.material = woodMaterial;
                         }
-                        
-                    }   
-                    box.position.x =i;
-                    box.position.z =j;
+
+                    }
+                    box.position.x = i;
+                    box.position.z = j;
                 }
-                
+
             }
-            
+
         }
 
 

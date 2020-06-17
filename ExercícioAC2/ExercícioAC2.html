@@ -50,14 +50,13 @@
         var engine = null;
         var scene = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
-        var player, clickX, clickZ, impact;
+        var btnif = true;
 
         var createScene = function () {
             // Create the scene space
             scene = new BABYLON.Scene(engine);
             createLights();
             createCamera();
-            createCubes();
             managerEvents();
             uiManeger();
             //MostrarEixos();
@@ -68,31 +67,66 @@
         function uiManeger() {
 
             var ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI");
+
+
+
+
             //Delete Button
-            btnAdd = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Adicionar");
-            
-            btnAdd.top = "40%";
-            btnAdd.left = "0px";
+            btnAdd = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Deletar");
+
+            btnAdd.top = "-40%";
+            btnAdd.left = "500px";
             btnAdd.width = "200px";
             btnAdd.height = "50px";
             btnAdd.thickness = 4;
-            btnAdd.children[0].color = "#DFF9FB";
-            btnAdd.children[0].fontSize = 24;
-            btnAdd.color = "#FF7979";
-            btnAdd.background = "#EB4D4B"
+            btnAdd.textBlock.color = "#FDFEFE";
+            btnAdd.textBlock.fontSize = 24;
+            btnAdd.color = "#83DA47";
+            btnAdd.background = "#000000"
 
-            var i = true;
             var onBtnAddClick = () => {
-                if (i) {
-                    btnAdd.textBlock.text = "Deletar";
-                    i = false;
-                } else {
+                if (btnif) {
                     btnAdd.textBlock.text = "Adicionar";
-                    i = true;
+                    btnAdd.color = "#FF0023";
+                    btnif = false;
+                } else {
+                    btnAdd.textBlock.text = "Deletar";
+                    btnAdd.color = "#83DA47";
+                    btnif = true;
                 }
+
+                console.log(btnif);
             }
             btnAdd.onPointerClickObservable.add(onBtnAddClick);
-            ui.addControl(this.btnAdd);
+
+            var number = undefined;
+            var input = new BABYLON.GUI.InputText();
+            input.top = "40%";
+            input.width = "100px";
+            input.maxWidth = 0.2;
+            input.height = "40px";
+            input.text = "Tamanho!";
+            input.color = "white";
+            input.background = "green";
+
+            input.onTextChangedObservable.add((input) => {
+                let key = input.currentKey;
+                if (key < "0" || key > "9") {
+                    intput.addKey = false;
+                } else {
+                    number = input.text;
+                    if (number <= 9 && input.text != "") {
+                        createCubes(number);
+                    }
+                }
+            });
+
+            input.onPointerClickObservable.add(function () {
+                input.text="";
+            });
+
+            ui.addControl(input);
+            ui.addControl(btnAdd);
         }
         function MostrarEixos() {
 
@@ -139,35 +173,40 @@
         function managerEvents() {
             scene.onPointerDown = function (evt, pickResult) {
                 if (pickResult.hit && pickResult.pickedMesh.name == 'box') {
-                    var newBox = pickResult.pickedMesh.clone();
-                    newBox.position.y += 1;
-                    newBox.name = "box";
+                    if (btnif) {
+                        var newBox = pickResult.pickedMesh.clone();
+                        newBox.position.y += 1;
+                        newBox.name = "box";
+                    } else {
+                        pickResult.pickedMesh.dispose();
+                    }
+
+
                 }
             };
         }
 
         function createCamera() {
-
-
             var camera = new BABYLON.ArcRotateCamera("Camera", 1, 1, 15, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-
-
         }
 
-        function createCubes() {
+        function createCubes(size) {
             var metalMaterial = new BABYLON.StandardMaterial("MetalMaterial", scene);
             metalMaterial.ambientTexture = new BABYLON.Texture("Textures/MetalTexture.jpg", scene);
             var woodMaterial = new BABYLON.StandardMaterial("MetalMaterial", scene);
             woodMaterial.ambientTexture = new BABYLON.Texture("Textures/WoodTexture.jpg", scene);
             //metalMaterial.ambientTexture = new BABYLON.Texture("Textures/ChromeMetal.jpg", scene);
             //metalMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            var meshes = scene.getMeshesByID("box");
+            meshes.forEach(function (mesh) {
+                mesh.dispose();
+            });
 
-
-            for (let j = 0; j < 6; j++) {
-                for (let i = 0; i < 6; i++) {
+            for (let j = 0; j < size; j++) {
+                for (let i = 0; i < size; i++) {
                     var box = BABYLON.MeshBuilder.CreateBox("box", {}, scene); // default box
-
+                    box.id="box";
                     if (i % 2 == 0) {
                         if (j % 2 == 0) {
                             box.material = metalMaterial;

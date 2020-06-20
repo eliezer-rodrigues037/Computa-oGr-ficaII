@@ -58,7 +58,7 @@
             createCamera();
             managerEvents();
             uiManeger();
-            MostrarEixos();
+            //MostrarEixos();
 
             return scene;
         }
@@ -80,7 +80,7 @@
             btnEditTexture.background = "#000000";
 
             var onbtnEditTextureClick = () =>{
-                if(!alternatorEdit && (!alternatorMetal || !alternatorStone || !alternatorWood)){
+                if(!alternatorEdit && textureChanger != undefined){
                     alternatorEdit = true;
                     btnEditTexture.color="#83DA47";
                 }else{

@@ -50,8 +50,7 @@
         var engine = null;
         var scene = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
-        var btnif = true;
-
+        var textureChanger = undefined, buttonChanger = true, alternatorMetal = false, alternatorWood = false, alternatorStone = false, alternatorEdit = false;
         var createScene = function () {
             // Create the scene space
             scene = new BABYLON.Scene(engine);
@@ -59,55 +58,142 @@
             createCamera();
             managerEvents();
             uiManeger();
-            //MostrarEixos();
+            MostrarEixos();
 
             return scene;
         }
-
+        
         function uiManeger() {
 
             var ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI");
 
+            //Edit Button
+            btnEditTexture = BABYLON.GUI.Button.CreateSimpleButton("btnEdit", "Editar");
+            btnEditTexture.top = "-40%";
+            btnEditTexture.left = "-500px";
+            btnEditTexture.width = "200px";
+            btnEditTexture.height = "50px";
+            btnEditTexture.thickness = 4;
+            btnEditTexture.textBlock.color="#FDFEFE";
+            btnEditTexture.textBlock.fontSize=24;
+            btnEditTexture.color="#000000";
+            btnEditTexture.background = "#000000";
 
+            var onbtnEditTextureClick = () =>{
+                if(!alternatorEdit && (!alternatorMetal || !alternatorStone || !alternatorWood)){
+                    alternatorEdit = true;
+                    btnEditTexture.color="#83DA47";
+                }else{
+                    alternatorEdit = false;
+                    btnEditTexture.color="#000000";
+                }
+            }
+            btnEditTexture.onPointerClickObservable.add(onbtnEditTextureClick);
 
+            //Wood Texture Button
+            btnWoodTexture = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Madeira");
+            btnWoodTexture.top = "-40%";
+            btnWoodTexture.left = "500px";
+            btnWoodTexture.width = "200px";
+            btnWoodTexture.height = "50px";
+            btnWoodTexture.thickness = 4;
+            btnWoodTexture.textBlock.color = "#FDFEFE";
+            btnWoodTexture.textBlock.fontSize = 24;
+            btnWoodTexture.color = "#000000";
+            btnWoodTexture.background = "#000000"
 
-            //Delete Button
-            btnAdd = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Deletar");
-
-            btnAdd.top = "-40%";
-            btnAdd.left = "500px";
-            btnAdd.width = "200px";
-            btnAdd.height = "50px";
-            btnAdd.thickness = 4;
-            btnAdd.textBlock.color = "#FDFEFE";
-            btnAdd.textBlock.fontSize = 24;
-            btnAdd.color = "#83DA47";
-            btnAdd.background = "#000000"
-
-            var onBtnAddClick = () => {
-                if (btnif) {
-                    btnAdd.textBlock.text = "Adicionar";
-                    btnAdd.color = "#FF0023";
-                    btnif = false;
+            var onbtnWoodTextureClick = () => {
+                console.log(alternatorMetal);
+                console.log(alternatorWood);
+                if (!alternatorWood) {
+                    textureChanger = new BABYLON.StandardMaterial("MetalMaterial", scene);
+                    textureChanger.ambientTexture = new BABYLON.Texture("Textures/WoodTexture.jpg", scene);
+                    btnWoodTexture.color = "#83DA47";
+                    btnMetalTexture.color = "#000000";
+                    btnStoneTexture.color = "#000000";
+                    alternatorWood = true;
+                    alternatorMetal = false;
+                    alternatorStone = false;
                 } else {
-                    btnAdd.textBlock.text = "Deletar";
-                    btnAdd.color = "#83DA47";
-                    btnif = true;
+                    textureChanger = undefined;
+                    btnWoodTexture.color = "#000000";
+                    alternatorStone = false;
                 }
 
-                console.log(btnif);
             }
-            btnAdd.onPointerClickObservable.add(onBtnAddClick);
+            btnWoodTexture.onPointerClickObservable.add(onbtnWoodTextureClick);
+
+            //Metal Texture Button
+            btnMetalTexture = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Metal");
+            btnMetalTexture.top = "-40%";
+            btnMetalTexture.left = "300px";
+            btnMetalTexture.width = "200px";
+            btnMetalTexture.height = "50px";
+            btnMetalTexture.thickness = 4;
+            btnMetalTexture.textBlock.color = "#FDFEFE";
+            btnMetalTexture.textBlock.fontSize = 24;
+            btnMetalTexture.color = "#000000";
+            btnMetalTexture.background = "#000000"
+            var onbtnMetalTextureClick = () => {
+                
+                if (!alternatorMetal) {
+                    textureChanger = new BABYLON.StandardMaterial("MetalMaterial", scene);
+                    textureChanger.ambientTexture = new BABYLON.Texture("Textures/MetalTexture.jpg", scene);
+                    btnMetalTexture.color = "#83DA47";
+                    btnWoodTexture.color = "#000000";
+                    btnStoneTexture.color = "#000000";
+                    alternatorMetal = true;
+                    alternatorWood = false;
+                    alternatorStone = false;
+                } else {
+                    textureChanger = undefined;
+                    btnMetalTexture.color = "#000000";
+                    alternatorMetal = false;
+                }
+            }
+            btnMetalTexture.onPointerClickObservable.add(onbtnMetalTextureClick);
+
+            //Stone Texture Button
+            btnStoneTexture = BABYLON.GUI.Button.CreateSimpleButton("btnAdd", "Pedra");
+            btnStoneTexture.top = "-40%";
+            btnStoneTexture.left = "100px";
+            btnStoneTexture.width = "200px";
+            btnStoneTexture.height = "50px";
+            btnStoneTexture.thickness = 4;
+            btnStoneTexture.textBlock.color = "#FDFEFE";
+            btnStoneTexture.textBlock.fontSize = 24;
+            btnStoneTexture.color = "#000000";
+            btnStoneTexture.background = "#000000"
+            var onbtnStoneTextureClick = () => {
+                if (!alternatorStone) {
+                    textureChanger = new BABYLON.StandardMaterial("StoneMaterial", scene);
+                    textureChanger.ambientTexture = new BABYLON.Texture("Textures/StoneTexture.png", scene);
+                    btnStoneTexture.color = "#83DA47";
+                    btnWoodTexture.color = "#000000";
+                    btnMetalTexture.color = "#000000";
+                    alternatorStone = true;
+                    alternatorWood = false;
+                    alternatorMetal = false;
+                } else {
+                    textureChanger = undefined;
+                    btnStoneTexture.color = "#000000";
+                    alternatorStone = false;
+                }
+            }
+            btnStoneTexture.onPointerClickObservable.add(onbtnStoneTextureClick);
+
+
 
             var number = undefined;
             var input = new BABYLON.GUI.InputText();
             input.top = "40%";
             input.width = "100px";
             input.maxWidth = 0.2;
+            input.thickness = 4;
             input.height = "40px";
             input.text = "Tamanho!";
             input.color = "white";
-            input.background = "green";
+            input.background = "#000000";
 
             input.onTextChangedObservable.add((input) => {
                 let key = input.currentKey;
@@ -115,18 +201,21 @@
                     intput.addKey = false;
                 } else {
                     number = input.text;
-                    if (number <= 9 && input.text != "") {
+                    if (number <= 51 && input.text != "") {
                         createCubes(number);
                     }
                 }
             });
 
             input.onPointerClickObservable.add(function () {
-                input.text="";
+                input.text = "";
             });
 
             ui.addControl(input);
-            ui.addControl(btnAdd);
+            ui.addControl(btnEditTexture);
+            ui.addControl(btnStoneTexture);
+            ui.addControl(btnMetalTexture);
+            ui.addControl(btnWoodTexture);
         }
         function MostrarEixos() {
 
@@ -172,13 +261,61 @@
 
         function managerEvents() {
             scene.onPointerDown = function (evt, pickResult) {
+                //console.log(event.button);
                 if (pickResult.hit && pickResult.pickedMesh.name == 'box') {
-                    if (btnif) {
+                    if (event.button == 0) {
                         var newBox = pickResult.pickedMesh.clone();
-                        newBox.position.y += 1;
-                        newBox.name = "box";
+                        var faceID = pickResult.faceId;
+                        if (faceID == 0 || faceID == 1) {
+                            newBox.position.z += 1;
+                            newBox.name = "box";
+                            newBox.id = "box";
+                            if (textureChanger != undefined) {
+                                newBox.material = textureChanger;
+                            }
+                        } else if (faceID == 2 || faceID == 3) {
+                            newBox.position.z -= 1;
+                            newBox.name = "box";
+                            newBox.id = "box";
+                            if (textureChanger != undefined) {
+                                newBox.material = textureChanger;
+                            }
+                        } else if (faceID == 4 || faceID == 5) {
+                            newBox.position.x += 1;
+                            newBox.name = "box";
+                            newBox.id = "box";
+                            if (textureChanger != undefined) {
+                                newBox.material = textureChanger;
+                            }
+                        } else if (faceID == 6 || faceID == 7) {
+                            newBox.position.x -= 1;
+                            newBox.name = "box";
+                            newBox.id = "box";
+                            if (textureChanger != undefined) {
+                                newBox.material = textureChanger;
+                            }
+                        } else if (faceID == 8 || faceID == 9) {
+                            newBox.position.y += 1;
+                            newBox.name = "box";
+                            newBox.id = "box";
+                            if (textureChanger != undefined) {
+                                newBox.material = textureChanger;
+                            }
+                        } else if (faceID == 10 || faceID == 11) {
+                            newBox.position.y -= 1;
+                            newBox.name = "box";
+                            newBox.id = "box";
+                            if (textureChanger != undefined) {
+                                newBox.material = textureChanger;
+                            }
+                        }
                     } else {
-                        pickResult.pickedMesh.dispose();
+                        if(alternatorEdit && textureChanger != undefined){
+                            pickResult.pickedMesh.material = textureChanger;
+                        }else{
+                            pickResult.pickedMesh.dispose();
+                        }
+                        
                     }
 
 
@@ -196,8 +333,7 @@
             metalMaterial.ambientTexture = new BABYLON.Texture("Textures/MetalTexture.jpg", scene);
             var woodMaterial = new BABYLON.StandardMaterial("MetalMaterial", scene);
             woodMaterial.ambientTexture = new BABYLON.Texture("Textures/WoodTexture.jpg", scene);
-            //metalMaterial.ambientTexture = new BABYLON.Texture("Textures/ChromeMetal.jpg", scene);
-            //metalMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+
             var meshes = scene.getMeshesByID("box");
             meshes.forEach(function (mesh) {
                 mesh.dispose();
@@ -206,7 +342,7 @@
             for (let j = 0; j < size; j++) {
                 for (let i = 0; i < size; i++) {
                     var box = BABYLON.MeshBuilder.CreateBox("box", {}, scene); // default box
-                    box.id="box";
+                    box.id = "box";
                     if (i % 2 == 0) {
                         if (j % 2 == 0) {
                             box.material = metalMaterial;
